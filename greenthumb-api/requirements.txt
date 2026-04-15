@@ -1,0 +1,2 @@
+# App-specific deps not in requirements-base.txt
+# (currently empty — all deps are in requirements-base.txt)
