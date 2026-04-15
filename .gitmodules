@@ -1,0 +1,15 @@
+[submodule "account-service"]
+	path = account-service
+	url = https://github.com/GreenThumbProject/account-service.git
+[submodule "auth-service"]
+	path = auth-service
+	url = https://github.com/GreenThumbProject/auth-service.git
+[submodule "gateway"]
+	path = gateway
+	url = https://github.com/GreenThumbProject/gateway.git
+[submodule "greenthumb-api"]
+	path = greenthumb-api
+	url = https://github.com/GreenThumbProject/greenthumb-api.git
+[submodule "admin-dashboard"]
+	path = admin-dashboard
+	url = https://github.com/GreenThumbProject/admin-dashboard.git
