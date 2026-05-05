@@ -48,11 +48,11 @@ down:
 # ============================================
 
 dev:
-	docker compose build api controller local-dashboard
+	docker compose build
 	docker compose up -d
 
 dev-nc:
-	docker compose build --no-cache api controller local-dashboard
+	docker compose build --no-cache
 	docker compose up -d
 
 reset-db:
