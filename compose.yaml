@@ -1,39 +1,21 @@
 # GreenThumb Cloud — Local development Docker Compose
 #
 # Services:
-#   db             — PostgreSQL 17 (cloud schema)
-#   greenthumb-api — FastAPI app (admin + sync routes)
-#   auth-service   — Java JWT auth microservice
-#   account-service— Java account management microservice
+#   greenthumb-api — FastAPI app (admin + sync routes) → connects to Supabase
+#   auth-service   — Java JWT auth microservice        → connects to Supabase
+#   account-service— Java account management           → connects to Supabase
 #   gateway        — API gateway (routes to correct service)
 #
-# Usage:
-#   cp .env.example .env && docker compose up --build
+# The cloud database is Supabase (hosted PostgreSQL).
+# There is no local db container — configure DATABASE_URL / DB_URL in .env.
 #
-# Build context is the cloud/ directory.
-# greenthumb-models is copied from rasp5/greenthumb-models (shared package).
+# Usage:
+#   cp .env.example .env   # fill in Supabase credentials
+#   docker compose up --build
 
 name: greenthumb-cloud
 
 services:
-
-  # ---- PostgreSQL --------------------------------------------------------
-  db:
-    image: postgres:17
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER:     ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
-      POSTGRES_DB:       ${DB_NAME:-greenthumb}
-    volumes:
-      - pg_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-    ports:
-      - "5433:5432"   # Exposed on 5433 to avoid conflict with Pi-local DB on 5432
 
   # ---- GreenThumb FastAPI ------------------------------------------------
   greenthumb-api:
@@ -41,51 +23,40 @@ services:
       context: ..         # repo root — needs rasp5/greenthumb-models
       dockerfile: cloud/greenthumb-api/Dockerfile
     restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
     environment:
-      # Local dev default points to the db container.
-      # In production set DATABASE_URL to your Supabase connection string.
-      DATABASE_URL:     ${DATABASE_URL:-postgresql+psycopg2://${DB_USER:-postgres}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-greenthumb}}
+      # Supabase PostgreSQL connection string (session-mode pooler, port 5432)
+      DATABASE_URL:     ${DATABASE_URL}
       AUTH_SERVICE_URL: http://auth-service:8081
       DEV_AUTH_BYPASS:  ${DEV_AUTH_BYPASS:-false}
-      # Supabase Storage — the cloud API uploads photos here on behalf of the Pi
-      SUPABASE_URL:     ${SUPABASE_URL:-}
-      SUPABASE_KEY:     ${SUPABASE_KEY:-}
+      # Supabase Storage — used by sync routes to upload Pi photos
+      SUPABASE_URL:     ${SUPABASE_URL}
+      SUPABASE_KEY:     ${SUPABASE_KEY}
     ports:
       - "8000:8000"
 
   # ---- Auth Service (Java — Spring Boot) ---------------------------------
   auth-service:
     build:
-      context: ./auth-service
+      context: .
+      dockerfile: auth-service/Dockerfile
     restart: unless-stopped
     environment:
-      # Local dev default. In production set DB_URL to Supabase JDBC URL:
-      # jdbc:postgresql://aws-0-[region].pooler.supabase.com:5432/postgres?sslmode=require
-      DB_URL:      ${DB_URL:-jdbc:postgresql://db:5432/${DB_NAME:-greenthumb}}
-      DB_USER:     ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-password}
-      JWT_SECRET:  ${JWT_SECRET:-change-me-in-production}
-    depends_on:
-      db:
-        condition: service_healthy
+      # Supabase JDBC connection string (credentials embedded in URL)
+      DB_URL:               ${DB_URL}
+      JWT_SECRET:           ${JWT_SECRET}
+      ACCOUNT_SERVICE_URL:  http://account-service:8082
     ports:
       - "8081:8081"
 
   # ---- Account Service (Java — Spring Boot) ------------------------------
   account-service:
     build:
-      context: ./account-service
+      context: .
+      dockerfile: account-service/Dockerfile
     restart: unless-stopped
     environment:
-      DB_URL:      ${DB_URL:-jdbc:postgresql://db:5432/${DB_NAME:-greenthumb}}
-      DB_USER:     ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-password}
-    depends_on:
-      db:
-        condition: service_healthy
+      # Supabase JDBC connection string (credentials embedded in URL)
+      DB_URL:      ${DB_URL}
     ports:
       - "8082:8082"
 
@@ -104,7 +75,3 @@ services:
       ACCOUNT_SERVICE_URL: http://account-service:8082
     ports:
       - "80:80"
-
-
-volumes:
-  pg_data:
