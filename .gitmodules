@@ -13,3 +13,9 @@
 [submodule "admin-dashboard"]
 	path = admin-dashboard
 	url = https://github.com/GreenThumbProject/admin-dashboard.git
+[submodule "account"]
+	path = account
+	url = https://github.com/GreenThumbProject/account.git
+[submodule "auth"]
+	path = auth
+	url = https://github.com/GreenThumbProject/auth.git
