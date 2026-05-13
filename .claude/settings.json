@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import utils; print\\(utils.__file__\\)\")",
+      "Bash(python3 -c \"import utils; print\\(utils.__file__\\)\")",
+      "Read(//c/Users/henri/**)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)"
+    ]
+  }
+}
