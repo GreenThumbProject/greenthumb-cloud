@@ -29,6 +29,7 @@ services:
       AUTH_SERVICE_URL: http://auth-service:8081
       DEV_AUTH_BYPASS:  ${DEV_AUTH_BYPASS:-false}
       # Supabase Storage — used by sync routes to upload Pi photos
+      IS_CLOUD:         "true"
       SUPABASE_URL:     ${SUPABASE_URL}
       SUPABASE_KEY:     ${SUPABASE_KEY}
     ports:
